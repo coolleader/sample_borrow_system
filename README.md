@@ -12,8 +12,6 @@
 ## 文件结构
 sample-borrow-system/
 
-│
-
 ├── app.py # 主程序入口
 
 ├── requirements.txt # 所需依赖
