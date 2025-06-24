@@ -24,7 +24,7 @@ df = load_data()
 st.title("📦 样品送存管理系统")
 
 menu = ["样品登记", "送出样品", "归还样品", "当前状态", "删除样品"]
-choice = st.sidebar.selectbox("选择操作", menu)
+# choice = st.sidebar.selectbox("选择操作", menu)
 # choice = st.sidebar.radio("选择操作", menu)
 
 if choice == "样品登记":
