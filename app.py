@@ -6,8 +6,9 @@ import io
 from openpyxl.styles import numbers
 
 # 文件路径设置（共享和本地备份）
-DATA_FILE = r"\\192.168.5.252\文件中转\魏进磊\仓库清单\sample_inventory.xlsx"
-LOCAL_BACKUP_FILE = "sample_inventory_backup.xlsx"
+# DATA_FILE = r"\\192.168.5.252\文件中转\魏进磊\仓库清单\sample_inventory.xlsx"
+# LOCAL_BACKUP_FILE = "sample_inventory_backup.xlsx"
+DATA_FILE = "sample_inventory.xlsx"
 
 # 初始化样品库
 def load_data():
@@ -34,7 +35,7 @@ def save_data(df):
                     cell.number_format = '@'  # 文本格式
 
     write_excel(DATA_FILE)
-    write_excel(LOCAL_BACKUP_FILE)
+    # write_excel(LOCAL_BACKUP_FILE)
 
 # 加载数据
 df = load_data()
