@@ -14,8 +14,9 @@ gc = gspread.authorize(creds)
 
 # 📄 打开 Google Sheet
 SHEET_ID = "14NUgJ8kk9DJtWaRKtIM_bQ5VXTJkZDibG28z_v_AwbU"
-SHEET_NAME = "simple_inventory"
+SHEET_NAME = "sample_inventory"
 worksheet = gc.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
+
 
 # ✅ 读取数据
 def load_data():
