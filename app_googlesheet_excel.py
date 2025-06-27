@@ -4,8 +4,9 @@ from datetime import datetime
 import gspread
 import io
 from google.oauth2.service_account import Credentials
+import openpyxl.utils.cell
 
-# 🔐 Google Sheets 认证
+# Google Sheets 授权
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(
     st.secrets["gcp_service_account"],
@@ -13,19 +14,19 @@ creds = Credentials.from_service_account_info(
 )
 gc = gspread.authorize(creds)
 
-# 📄 打开 Google Sheet
+# Google Sheet 配置
 SHEET_ID = "14NUgJ8kk9DJtWaRKtIM_bQ5VXTJkZDibG28z_v_AwbU"
 SHEET_NAME = "sample_inventory"
 worksheet = gc.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 
-# 🔁 列定义
+# 表头字段
 COLUMNS = [
     '型号', '序列号', '料号', '样品快递号', '状态',
     '送出时间', '送出客户', '送出附件',
     '收货时间', '收货快递号', '归还附件'
 ]
 
-# ✅ 读取数据
+# 读取数据
 def load_data():
     try:
         records = worksheet.get_all_records()
@@ -35,12 +36,13 @@ def load_data():
     except:
         return pd.DataFrame(columns=COLUMNS)
 
-# ✅ 保存数据（覆盖整张 Sheet，包括列名）
+# 保存数据
 def save_data(df):
+    df = df.astype(str)
     worksheet.clear()
     worksheet.update([df.columns.tolist()] + df.values.tolist())
 
-# ========== Streamlit 页面 ==========
+# UI 开始
 df = load_data()
 st.title("📦 样品送存管理系统")
 
@@ -49,10 +51,11 @@ choice = st.radio("选择操作", menu)
 
 if choice == "样品登记":
     st.header("📄 样品登记")
-    sample_type = st.text_input("型号")
-    sample_id = st.text_input("序列号")
-    sample_material = st.text_input("料号")
-    sample_deliver_id = st.text_input("样品快递号")
+    sample_type = st.text_input("型号").strip()
+    sample_id = st.text_input("序列号").strip()
+    sample_material = st.text_input("料号").strip()
+    sample_deliver_id = st.text_input("样品快递号").strip()
+
     if st.button("登记"):
         if sample_id and sample_id not in df['序列号'].astype(str).values:
             new_row = pd.DataFrame([{
@@ -72,9 +75,10 @@ if choice == "样品登记":
 
 elif choice == "送出样品":
     st.header("📤 送出样品")
-    sid = st.text_input("序列号")
-    client = st.text_input("送出客户")
-    send_attach = st.text_input("送出附件")
+    sid = st.text_input("序列号").strip()
+    client = st.text_input("送出客户").strip()
+    send_attach = st.text_input("送出附件").strip()
+
     if st.button("确认送出"):
         if sid in df['序列号'].astype(str).values:
             idx = df[df['序列号'].astype(str) == sid].index[0]
@@ -89,15 +93,16 @@ elif choice == "送出样品":
                 save_data(df)
                 st.success("✅ 样品送出成功")
             else:
-                st.warning("⚠️ 该样品不是在库状态")
+                st.warning("⚠️ 样品不是在库状态")
         else:
             st.warning("⚠️ 样品不存在")
 
 elif choice == "归还样品":
     st.header("📥 归还样品")
-    sid = st.text_input("序列号")
-    deliver_id = st.text_input("收货快递号")
-    return_attach = st.text_input("归还附件")
+    sid = st.text_input("序列号").strip()
+    deliver_id = st.text_input("收货快递号").strip()
+    return_attach = st.text_input("归还附件").strip()
+
     if st.button("确认归还"):
         if sid in df['序列号'].astype(str).values:
             idx = df[df['序列号'].astype(str) == sid].index[0]
@@ -109,7 +114,7 @@ elif choice == "归还样品":
                 save_data(df)
                 st.success("✅ 样品已归还")
             else:
-                st.warning("⚠️ 样品未送出")
+                st.warning("⚠️ 样品不是送出状态")
         else:
             st.warning("⚠️ 样品不存在")
 
@@ -117,10 +122,15 @@ elif choice == "当前状态":
     st.header("📊 当前样品状态")
     st.dataframe(df, use_container_width=True)
 
-    # 导出为 Excel 文件
+    # Excel 下载按钮，所有列文本格式
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='样品数据')
+        ws = writer.sheets['样品数据']
+        for col_idx in range(1, ws.max_column + 1):
+            col_letter = openpyxl.utils.cell.get_column_letter(col_idx)
+            for cell in ws[col_letter]:
+                cell.number_format = '@'  # 所有列设置为文本格式
     excel_buffer.seek(0)
 
     st.download_button(
@@ -132,8 +142,9 @@ elif choice == "当前状态":
 
 elif choice == "删除样品":
     st.header("❌ 删除样品")
-    sid = st.text_input("要删除的序列号")
+    sid = st.text_input("要删除的序列号").strip()
     confirm = st.checkbox("确认删除该样品")
+
     if st.button("删除"):
         if sid in df['序列号'].astype(str).values:
             if confirm:
