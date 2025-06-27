@@ -121,10 +121,16 @@ elif choice == "归还样品":
 elif choice == "当前状态":
     st.header("📊 当前样品状态")
 
-    # ✅ 使用 st.table 保留所有列原始文本（不省略前导0）
-    st.table(df.astype(str))  # 或 df.applymap(str)
+    # 拷贝副本用于前端展示
+    df_display = df.copy()
 
-    # ✅ 保留 Excel 导出
+    # ✅ 将所有列都转为字符串并添加 '\t' 前缀，防止格式化
+    df_display = df_display.applymap(lambda x: f"\t{x}" if pd.notnull(x) else "")
+
+    # 显示表格，所有列均为文本格式
+    st.dataframe(df_display, use_container_width=True)
+
+    # ✅ 保留原始 df 导出 Excel，显式设置所有列为文本格式
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='样品数据')
