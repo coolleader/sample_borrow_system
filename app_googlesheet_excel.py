@@ -117,17 +117,14 @@ elif choice == "归还样品":
                 st.warning("⚠️ 样品不是送出状态")
         else:
             st.warning("⚠️ 样品不存在")
+            
 elif choice == "当前状态":
     st.header("📊 当前样品状态")
 
-    # 👉 创建用于展示的副本，所有字段都加上制表符 \t
-    df_display = df.copy()
-    for col in df_display.columns:
-        df_display[col] = df_display[col].apply(lambda x: f"\t{x}" if x and not str(x).startswith('\t') else str(x))
+    # ✅ 使用 st.table 保留所有列原始文本（不省略前导0）
+    st.table(df.astype(str))  # 或 df.applymap(str)
 
-    st.dataframe(df_display, use_container_width=True)
-
-    # 👉 Excel 导出部分（保留原 df，不加 \t）
+    # ✅ 保留 Excel 导出
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='样品数据')
