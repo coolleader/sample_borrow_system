@@ -120,7 +120,9 @@ elif choice == "归还样品":
 
 elif choice == "当前状态":
     st.header("📊 当前样品状态")
-    st.dataframe(df, use_container_width=True)
+    
+    # 👉 所有列转为文本后展示，避免显示省略0等问题
+    st.dataframe(df.astype(str), use_container_width=True)
 
     # Excel 下载按钮，所有列文本格式
     excel_buffer = io.BytesIO()
