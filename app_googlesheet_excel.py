@@ -121,10 +121,10 @@ elif choice == "归还样品":
 elif choice == "当前状态":
     st.header("📊 当前样品状态")
     
-    # 👉 所有列转为文本后展示，避免显示省略0等问题
-    st.dataframe(df.astype(str), use_container_width=True)
+    # 💡 强制每个单元格内容显示为文本，避免前导0丢失
+    st.dataframe(df.applymap(str), use_container_width=True)
 
-    # Excel 下载按钮，所有列文本格式
+    # Excel 下载（所有列设为文本格式）
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='样品数据')
@@ -132,7 +132,7 @@ elif choice == "当前状态":
         for col_idx in range(1, ws.max_column + 1):
             col_letter = openpyxl.utils.cell.get_column_letter(col_idx)
             for cell in ws[col_letter]:
-                cell.number_format = '@'  # 所有列设置为文本格式
+                cell.number_format = '@'  # 设置为文本格式
     excel_buffer.seek(0)
 
     st.download_button(
