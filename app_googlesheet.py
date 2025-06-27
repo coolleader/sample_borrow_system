@@ -22,6 +22,14 @@ worksheet = gc.open_by_key(SHEET_ID).worksheet(SHEET_NAME)
 def load_data():
     try:
         records = worksheet.get_all_records()
+        if not records:  # 表是空的，主动写入列头
+            columns = [
+                '型号', '序列号', '料号', '样品快递号', '状态',
+                '送出时间', '送出客户', '送出附件',
+                '收货时间', '收货快递号', '归还附件'
+            ]
+            worksheet.append_row(columns)
+            return pd.DataFrame(columns=columns)
         return pd.DataFrame(records)
     except:
         return pd.DataFrame(columns=[
