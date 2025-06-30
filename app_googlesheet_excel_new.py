@@ -5,7 +5,6 @@ import gspread
 import io
 import openpyxl.utils.cell
 from google.oauth2.service_account import Credentials
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Google Sheets 授权
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -122,26 +121,16 @@ elif choice == "归还样品":
 elif choice == "当前状态":
     st.header("📊 当前样品状态")
 
-    # ✅ 拷贝副本并把关键列转为字符串
+    # 拷贝副本用于前端展示
     df_display = df.copy()
-    for col in ['序列号', '料号', '样品快递号', '收货快递号']:
-        if col in df_display.columns:
-            df_display[col] = df_display[col].astype(str)
 
-    # ✅ 配置 AgGrid 列强制为字符串类型
-    gb = GridOptionsBuilder.from_dataframe(df_display)
-    for col in ['序列号', '料号', '样品快递号', '收货快递号']:
-        gb.configure_column(col, type=["textColumn"])
+    # ✅ 将所有列都转为字符串并添加 '\t' 前缀，防止格式化
+    df_display = df_display.applymap(lambda x: f"\t{x}" if pd.notnull(x) else "")
 
-    # ✅ 显示 AgGrid 表
-    AgGrid(
-        df_display,
-        gridOptions=gb.build(),
-        enable_enterprise_modules=False,
-        fit_columns_on_grid_load=True
-    )
+    # 显示表格，所有列均为文本格式
+    st.dataframe(df_display, use_container_width=True)
 
-    # ✅ 导出 Excel（列格式为文本）
+    # ✅ 保留原始 df 导出 Excel，显式设置所有列为文本格式
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='样品数据')
@@ -149,7 +138,7 @@ elif choice == "当前状态":
         for col_idx in range(1, ws.max_column + 1):
             col_letter = openpyxl.utils.cell.get_column_letter(col_idx)
             for cell in ws[col_letter]:
-                cell.number_format = '@'
+                cell.number_format = '@'  # 设置为文本格式
     excel_buffer.seek(0)
 
     st.download_button(
